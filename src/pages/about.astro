@@ -1,0 +1,80 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="关于">
+  <article class="about">
+    <h1>关于本站</h1>
+    
+    <section>
+      <h2>YGAS Blog</h2>
+      <p>
+        这是一个专注于软件推荐的博客。每天分享优质软件工具，帮助你发现提升效率的好帮手。
+      </p>
+    </section>
+
+    <section>
+      <h2>内容来源</h2>
+      <p>
+        本站内容由 <strong>SoftwarePublisher</strong> 自动生成发布，
+        数据来源于 <strong>Digital Warehouse</strong> 软件收藏系统。
+      </p>
+    </section>
+
+    <section>
+      <h2>技术栈</h2>
+      <ul>
+        <li>博客框架：Astro</li>
+        <li>发布系统：SoftwarePublisher (Next.js)</li>
+        <li>数据存储：PocketBase</li>
+        <li>托管平台：Vercel</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>联系方式</h2>
+      <p>
+        如有任何问题或建议，欢迎通过 GitHub 与我联系。
+      </p>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .about {
+    max-width: 600px;
+  }
+
+  h1 {
+    margin-bottom: 2rem;
+  }
+
+  section {
+    margin-bottom: 2rem;
+  }
+
+  h2 {
+    font-size: 1.25rem;
+    color: var(--color-primary-light);
+    margin-bottom: 0.75rem;
+  }
+
+  p {
+    color: var(--color-text-muted);
+    line-height: 1.8;
+  }
+
+  ul {
+    color: var(--color-text-muted);
+    padding-left: 1.5rem;
+  }
+
+  li {
+    margin-bottom: 0.5rem;
+  }
+
+  strong {
+    color: var(--color-text);
+  }
+</style>
+
