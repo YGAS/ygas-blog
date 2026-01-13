@@ -66,23 +66,21 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 显示搜索结果
-  async function displayResults(results) {
+  function displayResults(results) {
     if (!results || results.length === 0) {
       searchResults.innerHTML = '<div class="search-empty">未找到相关内容</div>';
       return;
     }
 
-    const pagefindInstance = await loadPagefind();
     const html = [];
 
     for (const result of results) {
       try {
-        const data = await pagefindInstance.preview(result);
         const url = result.url.replace(/\/$/, ''); // 移除末尾斜杠
         html.push(`
           <div class="search-result-item">
-            <h3><a href="${url}">${data.title}</a></h3>
-            <p class="search-excerpt">${data.excerpt}</p>
+            <h3><a href="${url}">${result.meta.title || '未命名页面'}</a></h3>
+            <p class="search-excerpt">${result.excerpt || ''}</p>
           </div>
         `);
       } catch (e) {
