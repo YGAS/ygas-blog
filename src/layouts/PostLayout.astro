@@ -41,5 +41,184 @@ const formattedDate = date.toLocaleDateString('zh-CN', {
     padding-top: 1.5rem;
     border-top: 1px solid var(--color-border);
   }
+  
+  /* 搜索高亮样式 */
+  :global(.search-highlight) {
+    background-color: #fef08a;
+    padding: 0.1em 0.2em;
+    border-radius: 3px;
+    box-shadow: 0 0 0 2px #fef08a;
+    animation: highlight-fade 3s ease-out forwards;
+  }
+  
+  @keyframes highlight-fade {
+    0%, 50% {
+      background-color: #fef08a;
+      box-shadow: 0 0 0 2px #fef08a;
+    }
+    100% {
+      background-color: transparent;
+      box-shadow: none;
+    }
+  }
 </style>
+
+<script>
+  // 处理搜索跳转后的滚动和高亮
+  document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const highlightText = urlParams.get('highlight');
+    
+    if (!highlightText) return;
+    
+    const postContent = document.querySelector('.post-content');
+    if (!postContent) return;
+    
+    // 在文章内容中查找并高亮搜索词
+    const searchTerms = highlightText.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+    
+    // 递归遍历文本节点
+    function highlightInNode(node, terms) {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const text = node.textContent;
+        const lowerText = text.toLowerCase();
+        
+        // 检查是否包含任何搜索词
+        let foundTerm = null;
+        let foundIndex = -1;
+        
+        for (const term of terms) {
+          const index = lowerText.indexOf(term);
+          if (index !== -1 && (foundIndex === -1 || index < foundIndex)) {
+            foundIndex = index;
+            foundTerm = term;
+          }
+        }
+        
+        if (foundIndex !== -1 && foundTerm) {
+          // 创建高亮元素
+          const before = text.substring(0, foundIndex);
+          const match = text.substring(foundIndex, foundIndex + foundTerm.length);
+          const after = text.substring(foundIndex + foundTerm.length);
+          
+          const span = document.createElement('span');
+          span.className = 'search-highlight';
+          span.textContent = match;
+          
+          const parent = node.parentNode;
+          
+          if (before) {
+            parent.insertBefore(document.createTextNode(before), node);
+          }
+          parent.insertBefore(span, node);
+          if (after) {
+            const afterNode = document.createTextNode(after);
+            parent.insertBefore(afterNode, node);
+            // 继续在剩余文本中搜索
+            highlightInNode(afterNode, terms);
+          }
+          parent.removeChild(node);
+          
+          return span; // 返回第一个高亮元素
+        }
+      } else if (node.nodeType === Node.ELEMENT_NODE) {
+        // 跳过 script, style, 已高亮的元素
+        if (['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(node.tagName)) return null;
+        if (node.classList && node.classList.contains('search-highlight')) return null;
+        
+        // 遍历子节点
+        const childNodes = Array.from(node.childNodes);
+        for (const child of childNodes) {
+          const result = highlightInNode(child, terms);
+          if (result) return result; // 返回第一个找到的高亮元素
+        }
+      }
+      return null;
+    }
+    
+    // 查找所有匹配并高亮
+    function highlightAll(container, terms) {
+      let firstHighlight = null;
+      
+      function processNode(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+          const text = node.textContent;
+          const lowerText = text.toLowerCase();
+          
+          // 找到最早出现的搜索词
+          let foundTerm = null;
+          let foundIndex = -1;
+          
+          for (const term of terms) {
+            const index = lowerText.indexOf(term);
+            if (index !== -1 && (foundIndex === -1 || index < foundIndex)) {
+              foundIndex = index;
+              foundTerm = term;
+            }
+          }
+          
+          if (foundIndex !== -1 && foundTerm) {
+            const before = text.substring(0, foundIndex);
+            const match = text.substring(foundIndex, foundIndex + foundTerm.length);
+            const after = text.substring(foundIndex + foundTerm.length);
+            
+            const span = document.createElement('span');
+            span.className = 'search-highlight';
+            span.textContent = match;
+            
+            const parent = node.parentNode;
+            
+            if (before) {
+              parent.insertBefore(document.createTextNode(before), node);
+            }
+            parent.insertBefore(span, node);
+            
+            if (!firstHighlight) {
+              firstHighlight = span;
+            }
+            
+            if (after) {
+              const afterNode = document.createTextNode(after);
+              parent.insertBefore(afterNode, node);
+              parent.removeChild(node);
+              // 继续处理剩余文本
+              processNode(afterNode);
+            } else {
+              parent.removeChild(node);
+            }
+            return;
+          }
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+          if (['SCRIPT', 'STYLE', 'NOSCRIPT'].includes(node.tagName)) return;
+          if (node.classList && node.classList.contains('search-highlight')) return;
+          
+          const childNodes = Array.from(node.childNodes);
+          for (const child of childNodes) {
+            processNode(child);
+          }
+        }
+      }
+      
+      processNode(container);
+      return firstHighlight;
+    }
+    
+    // 执行高亮
+    const firstHighlight = highlightAll(postContent, searchTerms);
+    
+    // 滚动到第一个高亮位置
+    if (firstHighlight) {
+      setTimeout(() => {
+        firstHighlight.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }, 100);
+    }
+    
+    // 清理 URL 参数（可选，保持 URL 整洁）
+    const cleanUrl = window.location.pathname;
+    window.history.replaceState({}, '', cleanUrl);
+  });
+</script>
 

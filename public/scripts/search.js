@@ -12,6 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // 初始化 Pagefind
   let pagefind = null;
   
+  // 保存当前搜索词
+  let currentQuery = '';
+  
   // 动态加载 Pagefind
   async function loadPagefind() {
     if (!pagefind) {
@@ -47,8 +50,12 @@ document.addEventListener('DOMContentLoaded', () => {
   async function performSearch(query) {
     if (!query) {
       searchResults.innerHTML = '';
+      currentQuery = '';
       return;
     }
+
+    // 保存当前搜索词
+    currentQuery = query;
 
     const pagefindInstance = await loadPagefind();
     if (!pagefindInstance) {
@@ -57,8 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      const results = await pagefindInstance.search(query);
-      displayResults(results.results);
+      const searchResult = await pagefindInstance.search(query);
+      await displayResults(searchResult.results, query);
     } catch (e) {
       console.error('搜索出错:', e);
       searchResults.innerHTML = '<div class="search-error">搜索出错，请稍后重试</div>';
@@ -66,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 显示搜索结果
-  function displayResults(results) {
+  async function displayResults(results, query) {
     if (!results || results.length === 0) {
       searchResults.innerHTML = '<div class="search-empty">未找到相关内容</div>';
       return;
@@ -76,11 +83,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     for (const result of results) {
       try {
-        const url = result.url.replace(/\/$/, ''); // 移除末尾斜杠
+        // data 是一个函数，需要调用它来获取数据
+        const data = await result.data();
+        
+        // 获取 URL
+        let url = '#';
+        if (data.url) {
+          url = data.url;
+        }
+        
+        const cleanUrl = url.replace(/\/$/, ''); // 移除末尾斜杠
+        
+        // 添加搜索词参数，用于跳转后滚动到匹配位置
+        const urlWithQuery = `${cleanUrl}?highlight=${encodeURIComponent(query)}`;
+        
+        // 获取标题
+        let title = '未命名页面';
+        if (data.meta && data.meta.title) {
+          title = data.meta.title;
+        }
+        
+        // 获取摘要
+        let excerpt = '';
+        if (data.excerpt) {
+          excerpt = data.excerpt;
+        }
+        
         html.push(`
           <div class="search-result-item">
-            <h3><a href="${url}">${result.meta.title || '未命名页面'}</a></h3>
-            <p class="search-excerpt">${result.excerpt || ''}</p>
+            <h3><a href="${urlWithQuery}" class="search-result-link">${title}</a></h3>
+            <p class="search-excerpt">${excerpt}</p>
           </div>
         `);
       } catch (e) {
@@ -90,6 +122,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     searchResults.innerHTML = html.join('');
   }
+
+  // 使用事件委托处理搜索结果链接的点击
+  searchResults.addEventListener('click', (e) => {
+    const link = e.target.closest('.search-result-link');
+    if (link) {
+      // 让链接正常跳转，只是关闭搜索框
+      setTimeout(() => {
+        closeSearch();
+      }, 100);
+    }
+  });
 
   // 事件监听
   searchToggle.addEventListener('click', openSearch);
