@@ -28,6 +28,15 @@ const { title, description = '每日软件推荐' } = Astro.props;
             <li><a href="/">文章</a></li>
             <li><a href="/works">作品</a></li>
             <li><a href="/about">关于</a></li>
+            <li>
+              <button id="search-toggle" class="search-toggle" aria-label="搜索">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <span class="search-hint">⌘K</span>
+              </button>
+            </li>
           </ul>
         </nav>
       </header>
@@ -40,6 +49,31 @@ const { title, description = '每日软件推荐' } = Astro.props;
         <p>&copy; 2026 YGAS Blog. Powered by Astro & SoftwarePublisher</p>
       </footer>
     </div>
+
+    <!-- 搜索模态框 -->
+    <div id="search-modal" class="search-modal">
+      <div class="search-container">
+        <div class="search-header">
+          <input 
+            type="text" 
+            id="search-input" 
+            class="search-input" 
+            placeholder="搜索文章..." 
+            autocomplete="off"
+          />
+          <button id="search-close" class="search-close" aria-label="关闭搜索">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div id="search-results" class="search-results"></div>
+      </div>
+    </div>
+
+    <!-- 加载搜索脚本 -->
+    <script src="/scripts/search.js" is:inline></script>
   </body>
 </html>
 
